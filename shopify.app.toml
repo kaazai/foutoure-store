@@ -1,0 +1,62 @@
+name = "FOUTOURE Store"
+client_id = "YOUR_CLIENT_ID"
+application_url = "https://your-domain.com"
+embedded = true
+
+[access_scopes]
+# Define access scopes required by the app
+scopes = "write_products,read_products,write_metafields,read_metafields"
+
+[auth]
+redirect_urls = [
+    "https://your-domain.com/auth/callback",
+    "https://your-domain.com/api/auth/callback/shopify"
+]
+
+[webhooks]
+api_version = "2024-01"
+
+[pos]
+embedded = false
+
+[[metafields]]
+namespace = "announcements"
+key = "announcement_enabled"
+type = "boolean"
+name = "Enable Announcement Bar"
+description = "Toggle the announcement bar visibility"
+
+[[metafields]]
+namespace = "announcements"
+key = "announcement_text"
+type = "single_line_text_field"
+name = "Announcement Text"
+description = "The main text to display in the announcement bar"
+
+[[metafields]]
+namespace = "announcements"
+key = "announcement_end_date"
+type = "date_time"
+name = "End Date"
+description = "When the announcement should expire"
+
+[[metafields]]
+namespace = "announcements"
+key = "announcement_promo_code"
+type = "single_line_text_field"
+name = "Promo Code"
+description = "Promotion code to display"
+
+[[metafields]]
+namespace = "announcements"
+key = "announcement_gradient_from"
+type = "single_line_text_field"
+name = "Gradient Start Color"
+description = "Starting color of the gradient (Tailwind color class)"
+
+[[metafields]]
+namespace = "announcements"
+key = "announcement_gradient_to"
+type = "single_line_text_field"
+name = "Gradient End Color"
+description = "Ending color of the gradient (Tailwind color class)" 
