@@ -10,39 +10,57 @@ export default async function ProductPage({ params }: { params: { handle: string
     notFound()
   }
 
-  const images = product.images.edges.map((edge: any) => edge.node)
-  const variant = product.variants.edges[0].node
+  const images = product.images?.edges?.map((edge: any) => edge.node) || []
+  const variant = product.variants?.edges?.[0]?.node
+
+  if (!variant) {
+    notFound()
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-2 gap-8">
         <div className="space-y-4">
-          <Image
-            src={images[0].url || "/placeholder.svg"}
-            alt={images[0].altText || product.title}
-            width={500}
-            height={500}
-            className="w-full object-cover"
-          />
-          <div className="grid grid-cols-4 gap-4">
-            {images.slice(1).map((image: any, index: number) => (
+          {images.length > 0 ? (
+            <>
               <Image
-                key={index}
-                src={image.url || "/placeholder.svg"}
-                alt={image.altText || `${product.title} ${index + 2}`}
-                width={100}
-                height={100}
+                src={images[0].url || "/placeholder.svg"}
+                alt={images[0].altText || product.title}
+                width={500}
+                height={500}
                 className="w-full object-cover"
               />
-            ))}
-          </div>
+              {images.length > 1 && (
+                <div className="grid grid-cols-4 gap-4">
+                  {images.slice(1).map((image: any, index: number) => (
+                    <Image
+                      key={index}
+                      src={image.url || "/placeholder.svg"}
+                      alt={image.altText || `${product.title} ${index + 2}`}
+                      width={100}
+                      height={100}
+                      className="w-full object-cover"
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <Image
+              src="/placeholder.svg"
+              alt={product.title}
+              width={500}
+              height={500}
+              className="w-full object-cover"
+            />
+          )}
         </div>
         <div className="space-y-4">
           <h1 className="text-3xl font-bold">{product.title}</h1>
           <p className="text-xl font-semibold">
             {variant.price.amount} {variant.price.currencyCode}
           </p>
-          <div dangerouslySetInnerHTML={{ __html: product.description }} />
+          <div dangerouslySetInnerHTML={{ __html: product.description || "" }} />
           <AddToCartButton product={product} variant={variant} />
         </div>
       </div>
