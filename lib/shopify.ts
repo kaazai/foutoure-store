@@ -1,5 +1,5 @@
 const domain = process.env.SHOPIFY_STORE_DOMAIN!
-const storefrontAccessToken = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN!
+const adminAccessToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN!
 
 async function ShopifyFetch({
   query,
@@ -11,11 +11,11 @@ async function ShopifyFetch({
   if (!domain) {
     throw new Error('SHOPIFY_STORE_DOMAIN is not set')
   }
-  if (!storefrontAccessToken) {
-    throw new Error('SHOPIFY_STOREFRONT_ACCESS_TOKEN is not set')
+  if (!adminAccessToken) {
+    throw new Error('SHOPIFY_ADMIN_ACCESS_TOKEN is not set')
   }
 
-  const url = `https://${domain}/api/2024-01/graphql.json`
+  const url = `https://${domain}/admin/api/2024-01/graphql.json`
   console.log('Fetching from:', url)
   
   try {
@@ -23,7 +23,7 @@ async function ShopifyFetch({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": storefrontAccessToken,
+        "X-Shopify-Access-Token": adminAccessToken,
         "Accept": "application/json"
       },
       body: JSON.stringify({
@@ -675,5 +675,101 @@ export async function getProductByHandle(handle: string) {
     status: product.status,
     publishedAt: product.publishedAt,
     onlineStoreUrl: product.onlineStoreUrl
+  }
+}
+
+export async function setupMetafieldDefinitions() {
+  const endDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+  const formattedEndDate = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:${String(endDate.getSeconds()).padStart(2, '0')}`
+
+  const definitions = [
+    {
+      namespace: "announcements",
+      key: "announcement_enabled",
+      type: "boolean",
+      value: true
+    },
+    {
+      namespace: "announcements",
+      key: "announcement_text",
+      type: "single_line_text_field",
+      value: "Welcome to FOUTOURE - Premium Streetwear"
+    },
+    {
+      namespace: "announcements",
+      key: "announcement_end_date",
+      type: "date_time",
+      value: formattedEndDate
+    },
+    {
+      namespace: "announcements",
+      key: "announcement_promo_code",
+      type: "single_line_text_field",
+      value: "WELCOME20"
+    },
+    {
+      namespace: "announcements",
+      key: "announcement_gradient_from",
+      type: "single_line_text_field",
+      value: "purple-600"
+    },
+    {
+      namespace: "announcements",
+      key: "announcement_gradient_to",
+      type: "single_line_text_field",
+      value: "pink-600"
+    }
+  ]
+
+  try {
+    const results = []
+    
+    // Set all metafield values at once
+    const mutation = `
+      mutation metafieldsSet($metafields: [MetafieldsSetInput!]!) {
+        metafieldsSet(metafields: $metafields) {
+          metafields {
+            id
+            namespace
+            key
+            value
+            type
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `
+
+    const response = await ShopifyFetch({
+      query: mutation,
+      variables: {
+        metafields: definitions.map(def => ({
+          namespace: def.namespace,
+          key: def.key,
+          type: def.type,
+          value: typeof def.value === 'string' ? def.value : JSON.stringify(def.value),
+          ownerId: "gid://shopify/Shop/93125181765"
+        }))
+      }
+    })
+
+    if (response.body.data?.metafieldsSet?.userErrors?.length > 0) {
+      console.error('Error setting metafields:', response.body.data.metafieldsSet.userErrors)
+      throw new Error(response.body.data.metafieldsSet.userErrors[0].message)
+    }
+
+    const updatedMetafields = response.body.data?.metafieldsSet?.metafields
+    if (updatedMetafields) {
+      console.log('Updated metafields:', updatedMetafields)
+      results.push(...updatedMetafields)
+    }
+
+    return results
+  } catch (error) {
+    console.error('Error setting up metafields:', error)
+    throw error
   }
 }
