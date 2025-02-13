@@ -23,8 +23,7 @@ const nextConfig = {
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
-    serverActions: true
+    parallelServerCompiles: true
   },
   async headers() {
     return [
@@ -38,7 +37,9 @@ const nextConfig = {
         ]
       }
     ]
-  }
+  },
+  output: 'standalone',
+  staticPageGenerationTimeout: 120
 }
 
 mergeConfig(nextConfig, userConfig)

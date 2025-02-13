@@ -4,6 +4,9 @@ import NewsletterSignup from "@/components/newsletter-signup"
 import { getProducts } from "@/lib/shopify"
 import ProductCard from "@/components/product-card"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 60
+
 export default async function Home() {
   const products = await getProducts()
 

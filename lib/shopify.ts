@@ -111,9 +111,9 @@ export async function getProducts() {
 
   const { data } = await shopifyFetch({ 
     query,
-    cache: "no-store",
+    cache: "force-cache",
     headers: {
-      "Cache-Control": "no-cache"
+      "Cache-Control": "public, max-age=60, stale-while-revalidate=30"
     }
   })
 
@@ -186,11 +186,11 @@ export async function shopifyFetch({
         "Content-Type": "application/json",
         "X-Shopify-Access-Token": key,
         "Accept": "application/json",
-        "Cache-Control": "public, max-age=60, stale-while-revalidate=30",
         ...headers
       },
       body: JSON.stringify({ query, variables }),
-      cache
+      cache,
+      next: { revalidate: 60 }
     })
 
     if (!result.ok) {
