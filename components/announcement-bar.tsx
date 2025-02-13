@@ -1,113 +1,62 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { XMarkIcon } from '@heroicons/react/24/outline'
 
-interface AnnouncementSettings {
-  enabled: boolean
+interface AnnouncementBarProps {
   text: string
+  enabled: boolean
   endDate: string
   promoCode: string
-  gradient: {
-    from: string
-    to: string
-  }
+  gradientFrom: string
+  gradientTo: string
 }
 
-export default function AnnouncementBar() {
-  const [settings, setSettings] = useState<AnnouncementSettings>({
-    enabled: false,
-    text: "",
-    endDate: "",
-    promoCode: "",
-    gradient: { from: "purple-600", to: "pink-600" }
-  })
-
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    isExpired: false
-  })
+export default function AnnouncementBar({
+  text,
+  enabled,
+  endDate,
+  promoCode,
+  gradientFrom,
+  gradientTo
+}: AnnouncementBarProps) {
+  const [isVisible, setIsVisible] = useState(false)
+  const [hasExpired, setHasExpired] = useState(false)
 
   useEffect(() => {
-    // Fetch settings from our API
-    fetch("/api/settings/announcements")
-      .then(res => res.json())
-      .then(data => setSettings(data))
-      .catch(error => console.error("Failed to fetch announcement settings:", error))
-  }, [])
+    // Check if announcement should be shown
+    const endDateTime = new Date(endDate)
+    const now = new Date()
+    setHasExpired(now > endDateTime)
+    
+    // Show announcement if enabled and not expired
+    setIsVisible(enabled && !hasExpired)
+  }, [enabled, endDate])
 
-  useEffect(() => {
-    if (!settings.enabled || !settings.endDate) return
-
-    const calculateTimeLeft = () => {
-      const now = new Date()
-      const target = new Date(settings.endDate)
-      const difference = target.getTime() - now.getTime()
-
-      if (difference <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true })
-        return null
-      }
-
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24))
-      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24)
-      const minutes = Math.floor((difference / 1000 / 60) % 60)
-      const seconds = Math.floor((difference / 1000) % 60)
-
-      setTimeLeft({ days, hours, minutes, seconds, isExpired: false })
-      return difference
-    }
-
-    const remainingTime = calculateTimeLeft()
-    const timer = remainingTime !== null ? setInterval(calculateTimeLeft, 1000) : undefined
-
-    return () => {
-      if (timer) clearInterval(timer)
-    }
-  }, [settings.enabled, settings.endDate])
-
-  if (!settings.enabled || timeLeft.isExpired) {
-    return null
-  }
+  if (!isVisible) return null
 
   return (
-    <div className={`bg-gradient-to-r from-${settings.gradient.from} to-${settings.gradient.to} text-white py-2`}>
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-center gap-2 text-center text-sm">
-          <div className="font-medium tracking-wide">
-            {settings.text}
-          </div>
-          <div className="mx-2 font-medium">|</div>
-          <div className="font-mono tracking-wider flex items-center gap-[2px]">
-            <div className="flex flex-col items-center">
-              <span className="inline-block w-[2ch] font-medium">{String(timeLeft.days).padStart(2, "0")}</span>
-              <span className="text-[8px] font-medium tracking-wider opacity-80">DAYS</span>
-            </div>
-            <span className="mx-[1px]">:</span>
-            <div className="flex flex-col items-center">
-              <span className="inline-block w-[2ch] font-medium">{String(timeLeft.hours).padStart(2, "0")}</span>
-              <span className="text-[8px] font-medium tracking-wider opacity-80">HRS</span>
-            </div>
-            <span className="mx-[1px]">:</span>
-            <div className="flex flex-col items-center">
-              <span className="inline-block w-[2ch] font-medium">{String(timeLeft.minutes).padStart(2, "0")}</span>
-              <span className="text-[8px] font-medium tracking-wider opacity-80">MIN</span>
-            </div>
-            <span className="mx-[1px]">:</span>
-            <div className="flex flex-col items-center">
-              <span className="inline-block w-[2ch] font-medium">{String(timeLeft.seconds).padStart(2, "0")}</span>
-              <span className="text-[8px] font-medium tracking-wider opacity-80">SEC</span>
-            </div>
-          </div>
-          <div className="mx-2 font-medium">|</div>
-          <div className="font-medium tracking-wide">
-            USE CODE: <span className="font-bold relative inline-block group">
-              {settings.promoCode}
-              <span className="absolute inset-0 bg-white/10 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-sm" />
-            </span> TODAY!
-          </div>
+    <div className={`relative bg-gradient-to-r from-${gradientFrom} to-${gradientTo}`}>
+      <div className="mx-auto max-w-7xl py-3 px-3 sm:px-6 lg:px-8">
+        <div className="pr-16 sm:px-16 sm:text-center">
+          <p className="font-medium text-white">
+            <span>{text}</span>
+            {promoCode && (
+              <span className="inline-block bg-white/20 px-2 py-1 ml-2 rounded-md">
+                {promoCode}
+              </span>
+            )}
+          </p>
+        </div>
+        <div className="absolute inset-y-0 right-0 flex items-start pt-3 pr-3 sm:items-center sm:pt-0">
+          <button
+            type="button"
+            className="flex rounded-md p-1 hover:bg-white/10 focus:outline-none"
+            onClick={() => setIsVisible(false)}
+          >
+            <span className="sr-only">Dismiss</span>
+            <XMarkIcon className="h-5 w-5 text-white" aria-hidden="true" />
+          </button>
         </div>
       </div>
     </div>

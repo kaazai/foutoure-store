@@ -1,13 +1,17 @@
-import { Inter } from "next/font/google"
-import MarqueeBanner from "@/components/marquee-banner"
-import AnnouncementBar from "@/components/announcement-bar"
-import SiteHeader from "@/components/site-header"
-import SiteFooter from "@/components/site-footer"
-import { Providers } from "./providers"
-import "./globals.css"
-import type React from "react" // Import React
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import Header from '@/components/header'
+import Footer from '@/components/footer'
+import AnnouncementBar from '@/components/announcement-bar'
+import { Providers } from '@/components/providers'
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'FOUTOURE - Premium Streetwear',
+  description: 'Premium streetwear clothing and accessories.',
+}
 
 export default function RootLayout({
   children,
@@ -15,26 +19,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className="h-full">
+      <body className={`${inter.className} flex min-h-full flex-col`}>
         <Providers>
-          <MarqueeBanner />
-          <div className="sticky top-0 z-50 bg-white">
-            <SiteHeader />
-          </div>
-          <AnnouncementBar />
-          <main>{children}</main>
-          <SiteFooter />
+          <AnnouncementBar
+            enabled={true}
+            text="Welcome to FOUTOURE - Premium Streetwear"
+            endDate="2026-02-13T07:03:31Z"
+            promoCode="WELCOME20"
+            gradientFrom="purple-600"
+            gradientTo="pink-600"
+          />
+          <Header />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
         </Providers>
       </body>
     </html>
   )
 }
-
-
-
-import './globals.css'
-
-export const metadata = {
-      generator: 'v0.dev'
-    };
