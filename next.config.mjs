@@ -15,12 +15,30 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: [
+      'cdn.shopify.com',
+      'foutourestore.myshopify.com'
+    ]
   },
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+    serverActions: true
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, stale-while-revalidate=30'
+          }
+        ]
+      }
+    ]
+  }
 }
 
 mergeConfig(nextConfig, userConfig)

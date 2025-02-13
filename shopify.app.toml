@@ -1,6 +1,8 @@
 name = "FOUTOURE Store"
-client_id = "YOUR_CLIENT_ID"
-application_url = "https://your-domain.com"
+# Replace YOUR_CLIENT_ID with the API key from your Shopify Partner dashboard
+client_id = "4a5a7249e2011fedf6cabc80b67c3298"
+# Replace with your actual application URL (where your app is hosted)
+application_url = "https://foutoure-store.vercel.app"
 embedded = true
 
 [access_scopes]
@@ -9,8 +11,8 @@ scopes = "write_products,read_products,write_metafields,read_metafields"
 
 [auth]
 redirect_urls = [
-    "https://your-domain.com/auth/callback",
-    "https://your-domain.com/api/auth/callback/shopify"
+    "https://foutoure-store.vercel.app/auth/callback",
+    "https://foutoure-store.vercel.app/api/auth/callback/shopify"
 ]
 
 [webhooks]
@@ -59,4 +61,88 @@ namespace = "announcements"
 key = "announcement_gradient_to"
 type = "single_line_text_field"
 name = "Gradient End Color"
-description = "Ending color of the gradient (Tailwind color class)" 
+description = "Ending color of the gradient (Tailwind color class)"
+
+# Social Media Links
+[[metafields]]
+namespace = "social_media"
+key = "instagram_url"
+type = "single_line_text_field"
+name = "Instagram URL"
+description = "Your store's Instagram profile URL"
+
+[[metafields]]
+namespace = "social_media"
+key = "facebook_url"
+type = "single_line_text_field"
+name = "Facebook URL"
+description = "Your store's Facebook page URL"
+
+# Store Information
+[[metafields]]
+namespace = "store_info"
+key = "contact_email"
+type = "email"
+name = "Contact Email"
+description = "Primary contact email for customers"
+
+[[metafields]]
+namespace = "store_info"
+key = "phone_number"
+type = "single_line_text_field"
+name = "Phone Number"
+description = "Store contact phone number"
+
+# SEO Settings
+[[metafields]]
+namespace = "seo"
+key = "default_meta_description"
+type = "multi_line_text_field"
+name = "Default Meta Description"
+description = "Default meta description for pages without specific SEO settings"
+
+# Footer Content
+[[metafields]]
+namespace = "footer"
+key = "about_text"
+type = "multi_line_text_field"
+name = "About Us Text"
+description = "Short description about your store for the footer"
+
+# Shipping Information
+[[metafields]]
+namespace = "shipping"
+key = "free_shipping_threshold"
+type = "number_decimal"
+name = "Free Shipping Threshold"
+description = "Order amount required for free shipping"
+
+# Customer Service
+[[metafields]]
+namespace = "customer_service"
+key = "return_policy"
+type = "multi_line_text_field"
+name = "Return Policy"
+description = "Store return policy details"
+
+# Homepage Features
+[[metafields]]
+namespace = "homepage"
+key = "featured_collection"
+type = "single_line_text_field"
+name = "Featured Collection Handle"
+description = "Handle of the collection to feature on homepage"
+
+[[metafields]]
+namespace = "homepage"
+key = "hero_heading"
+type = "single_line_text_field"
+name = "Hero Section Heading"
+description = "Main heading for the homepage hero section"
+
+[[metafields]]
+namespace = "homepage"
+key = "hero_subtext"
+type = "multi_line_text_field"
+name = "Hero Section Subtext"
+description = "Supporting text for the homepage hero section" 
