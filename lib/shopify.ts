@@ -111,10 +111,7 @@ export async function getProducts() {
 
   const { data } = await shopifyFetch({ 
     query,
-    cache: "force-cache",
-    headers: {
-      "Cache-Control": "public, max-age=60, stale-while-revalidate=30"
-    }
+    next: { revalidate: 60 }
   })
 
   if (!data?.products?.edges) {
@@ -137,40 +134,39 @@ export async function getProducts() {
     })
   })
 
-  const products = data.products.edges.map((edge: any) => {
+  return data.products.edges.map((edge: any) => {
     const node = edge.node
-    const { id, title, handle, description } = node
-    const featuredImage = node.images?.edges[0]?.node || null
-    const price = node.variants?.edges[0]?.node?.price || "0.00"
-    const currencyCode = node.priceRange?.minVariantPrice?.currencyCode || "USD"
-
     return {
-      id,
-      title,
-      handle,
-      description,
-      price,
-      currencyCode,
-      image: featuredImage,
+      id: node.id,
+      title: node.title,
+      handle: node.handle,
+      description: node.description,
+      images: {
+        edges: node.images.edges
+      },
+      priceRange: {
+        minVariantPrice: node.priceRange.minVariantPrice
+      },
+      variants: {
+        edges: node.variants.edges
+      },
       status: node.status,
       publishedAt: node.publishedAt,
       onlineStoreUrl: node.onlineStoreUrl
     }
   })
-
-  return products
 }
 
 export async function shopifyFetch({
   query,
   variables = {},
   headers = {},
-  cache = "force-cache"
+  next
 }: {
   query: string
   variables?: any
   headers?: HeadersInit
-  cache?: RequestCache
+  next?: { revalidate: number }
 }) {
   try {
     const endpoint = `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2024-01/graphql.json`
@@ -189,8 +185,7 @@ export async function shopifyFetch({
         ...headers
       },
       body: JSON.stringify({ query, variables }),
-      cache,
-      next: { revalidate: 60 }
+      next
     })
 
     if (!result.ok) {
@@ -615,7 +610,7 @@ export async function updateProductImages(productId: string) {
 export async function getProductByHandle(handle: string) {
   const query = `
     query getProductByHandle($handle: String!) {
-      product(handle: $handle) {
+      productByHandle(handle: $handle) {
         id
         title
         handle
@@ -657,17 +652,14 @@ export async function getProductByHandle(handle: string) {
   const { data } = await shopifyFetch({ 
     query,
     variables: { handle },
-    cache: "force-cache",
-    headers: {
-      "Cache-Control": "public, max-age=60, stale-while-revalidate=30"
-    }
+    next: { revalidate: 60 }
   })
 
-  if (!data?.product) {
+  if (!data?.productByHandle) {
     throw new Error('Product not found')
   }
 
-  const product = data.product
+  const product = data.productByHandle
   const images = product.images?.edges.map((edge: any) => edge.node) || []
   const variants = product.variants?.edges.map((edge: any) => edge.node) || []
 
