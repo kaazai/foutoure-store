@@ -1,59 +1,93 @@
-import NextAuth from "next-auth"
-import type { AuthOptions } from "next-auth"
+import { NextAuthOptions, DefaultSession } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
+import { PrismaClient } from "@prisma/client"
+import bcrypt from "bcryptjs"
+import NextAuth from "next-auth/next"
 
 declare module "next-auth" {
+  interface User {
+    role?: string
+  }
   interface Session {
-    accessToken?: string
+    user: {
+      role?: string
+    } & DefaultSession["user"]
   }
 }
 
-const handler = NextAuth({
+const prisma = new PrismaClient()
+
+export const authOptions: NextAuthOptions = {
   providers: [
-    {
-      id: "shopify",
-      name: "Shopify",
-      type: "oauth",
-      authorization: {
-        url: `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/oauth/authorize`,
-        params: {
-          scope: "read_products write_products",
-          client_id: process.env.SHOPIFY_API_KEY,
-        },
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
       },
-      token: {
-        url: `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/oauth/access_token`,
-      },
-      userinfo: {
-        url: `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2024-01/shop.json`,
-      },
-      clientId: process.env.SHOPIFY_API_KEY,
-      clientSecret: process.env.SHOPIFY_API_SECRET_KEY,
-      profile(profile) {
-        return {
-          id: profile.shop.id.toString(),
-          name: profile.shop.name,
-          email: profile.shop.email,
-          image: profile.shop.domain,
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
         }
-      },
-    },
+
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email
+          }
+        })
+
+        if (!user) {
+          return null
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        )
+
+        if (!isPasswordValid) {
+          return null
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      }
+    })
   ],
+  session: {
+    strategy: "jwt"
+  },
   callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token
+    async jwt({ token, user }) {
+      if (user) {
+        return {
+          ...token,
+          role: user.role
+        }
       }
       return token
     },
-    async session({ session, token }: { session: any; token: any }) {
-      session.accessToken = token.accessToken
-      return session
-    },
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          role: token.role
+        }
+      }
+    }
   },
   pages: {
     signIn: "/auth/signin",
   },
-})
+  secret: process.env.NEXTAUTH_SECRET
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
 

@@ -1,62 +1,88 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { useState, useEffect } from "react"
 
-interface AnnouncementBarProps {
-  text: string
+interface AnnouncementSettings {
   enabled: boolean
+  text: string
   endDate: string
   promoCode: string
-  gradientFrom: string
-  gradientTo: string
+  gradient: {
+    from: string
+    to: string
+  }
 }
 
-export default function AnnouncementBar({
-  text,
-  enabled,
-  endDate,
-  promoCode,
-  gradientFrom,
-  gradientTo
-}: AnnouncementBarProps) {
-  const [isVisible, setIsVisible] = useState(false)
-  const [hasExpired, setHasExpired] = useState(false)
+export default function AnnouncementBar() {
+  const [settings, setSettings] = useState<AnnouncementSettings | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch("/api/public/announcements", {
+        cache: 'no-store'
+      })
+      if (!response.ok) {
+        console.error("Failed to fetch announcement settings:", response.statusText)
+        return
+      }
+
+      const data = await response.json()
+      
+      // Only show if enabled and not expired
+      if (data.enabled && new Date(data.endDate) > new Date()) {
+        setSettings(data)
+      } else {
+        setSettings(null)
+      }
+    } catch (error) {
+      console.error("Error fetching announcement settings:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Check if announcement should be shown
-    const endDateTime = new Date(endDate)
-    const now = new Date()
-    setHasExpired(now > endDateTime)
-    
-    // Show announcement if enabled and not expired
-    setIsVisible(enabled && !hasExpired)
-  }, [enabled, endDate])
+    fetchSettings()
 
-  if (!isVisible) return null
+    // Listen for updates from the admin dashboard
+    const handleUpdate = () => {
+      console.log("Announcement update event received")
+      fetchSettings()
+    }
+
+    window.addEventListener('announcementUpdate', handleUpdate)
+
+    // Poll for updates every 30 seconds
+    const interval = setInterval(fetchSettings, 30000)
+
+    return () => {
+      window.removeEventListener('announcementUpdate', handleUpdate)
+      clearInterval(interval)
+    }
+  }, [])
+
+  if (loading || !settings?.enabled) {
+    return null
+  }
 
   return (
-    <div className={`relative bg-gradient-to-r from-${gradientFrom} to-${gradientTo}`}>
-      <div className="mx-auto max-w-7xl py-3 px-3 sm:px-6 lg:px-8">
-        <div className="pr-16 sm:px-16 sm:text-center">
+    <div
+      style={{
+        background: `linear-gradient(to right, ${settings.gradient.from}, ${settings.gradient.to})`,
+      }}
+      className="relative"
+    >
+      <div className="max-w-7xl mx-auto py-3 px-3 sm:px-6 lg:px-8">
+        <div className="text-center sm:px-16">
           <p className="font-medium text-white">
-            <span>{text}</span>
-            {promoCode && (
-              <span className="inline-block bg-white/20 px-2 py-1 ml-2 rounded-md">
-                {promoCode}
+            <span className="md:inline">{settings.text}</span>
+            {settings.promoCode && (
+              <span className="block sm:ml-2 sm:inline-block">
+                <span className="font-bold">Code: {settings.promoCode}</span>
               </span>
             )}
           </p>
-        </div>
-        <div className="absolute inset-y-0 right-0 flex items-start pt-3 pr-3 sm:items-center sm:pt-0">
-          <button
-            type="button"
-            className="flex rounded-md p-1 hover:bg-white/10 focus:outline-none"
-            onClick={() => setIsVisible(false)}
-          >
-            <span className="sr-only">Dismiss</span>
-            <XMarkIcon className="h-5 w-5 text-white" aria-hidden="true" />
-          </button>
         </div>
       </div>
     </div>

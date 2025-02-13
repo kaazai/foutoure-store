@@ -4,10 +4,24 @@ import Link from "next/link"
 import { Menu, Search, User, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import CartSidebar from "@/components/cart-sidebar"
-import { useAuth } from "@/lib/useAuth"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 export default function SiteHeader() {
-  const { isAuthenticated, signIn, signOut } = useAuth()
+  const { data: session } = useSession()
+  const router = useRouter()
+
+  const handleAccountClick = () => {
+    if (session) {
+      if (session.user?.role === "admin") {
+        router.push("/dashboard/settings")
+      } else {
+        router.push("/account")
+      }
+    } else {
+      router.push("/auth/signin")
+    }
+  }
 
   return (
     <header className="border-b">
@@ -49,22 +63,9 @@ export default function SiteHeader() {
             <Button variant="ghost" size="icon">
               <Search className="h-5 w-5" />
             </Button>
-            {isAuthenticated ? (
-              <>
-                <Link href="/account">
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <Button variant="ghost" size="icon" onClick={() => signOut()}>
-                  <LogOut className="h-5 w-5" />
-                </Button>
-              </>
-            ) : (
-              <Button variant="ghost" size="icon" onClick={() => signIn()}>
-                <User className="h-5 w-5" />
-              </Button>
-            )}
+            <Button variant="ghost" size="icon" onClick={handleAccountClick}>
+              <User className="h-5 w-5" />
+            </Button>
             <CartSidebar />
           </div>
         </div>

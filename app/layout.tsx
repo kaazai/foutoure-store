@@ -1,16 +1,18 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
-import Header from '@/components/header'
-import Footer from '@/components/footer'
-import AnnouncementBar from '@/components/announcement-bar'
-import { Providers } from '@/components/providers'
+import { Inter } from "next/font/google"
+import MarqueeBanner from "@/components/marquee-banner"
+import AnnouncementBar from "@/components/announcement-bar"
+import SiteHeader from "@/components/site-header"
+import SiteFooter from "@/components/site-footer"
+import { Providers } from "./providers"
+import "./globals.css"
+import type React from "react" // Import React
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: 'FOUTOURE - Premium Streetwear',
-  description: 'Premium streetwear clothing and accessories.',
+export const metadata = {
+  title: 'FOUTOURE Store',
+  description: 'Your premium streetwear destination',
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -19,22 +21,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${inter.className} flex min-h-full flex-col`}>
+    <html lang="en">
+      <body className={inter.className}>
         <Providers>
-          <AnnouncementBar
-            enabled={true}
-            text="Welcome to FOUTOURE - Premium Streetwear"
-            endDate="2026-02-13T07:03:31Z"
-            promoCode="WELCOME20"
-            gradientFrom="purple-600"
-            gradientTo="pink-600"
-          />
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
+          <div className="flex flex-col min-h-screen">
+            <MarqueeBanner />
+            <div className="sticky top-0 z-50 bg-white">
+              <SiteHeader />
+            </div>
+            <AnnouncementBar />
+            <main className="flex-grow">{children}</main>
+            <SiteFooter />
+          </div>
         </Providers>
       </body>
     </html>
